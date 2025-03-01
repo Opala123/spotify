@@ -52,8 +52,3 @@ while ($true) {
 }
 
 Start-Process powershell -WindowStyle Hidden -ArgumentList "-File caminho_do_script.ps1"
-
-Como executar esses dois scripts aos mesmo tempo o de cima e o de baixo 
-
-iwr -useb https://raw.githubusercontent.com/spicetify/spicetify-cli/master/install.ps1 | iex
-iwr -useb https://raw.githubusercontent.com/spicetify/spicetify-marketplace/main/resources/install.ps1 | iex
